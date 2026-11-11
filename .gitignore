@@ -1,1 +1,16 @@
-bm9kZV9tb2R1bGVzLwouZW52Ci5lbnYuKgohLmVudi5leGFtcGxlCmJ1aWxkLwpkaXN0Lwoud3JhbmdsZXIvCmNvdmVyYWdlLwpwbGF5d3JpZ2h0LXJlcG9ydC8KdGVzdC1yZXN1bHRzLwoqLmxvZwoqLnppcAoqLnRnegouRFNfU3RvcmUKYmFja2VuZC8uYnJvd3Nlci1wcm9maWxlLwpiYWNrZW5kLy5sb2NhbC10b2tlbioK
+node_modules/
+.env
+.env.*
+!.env.example
+build/
+dist/
+.wrangler/
+coverage/
+playwright-report/
+test-results/
+*.log
+*.zip
+*.tgz
+.DS_Store
+backend/.browser-profile/
+backend/.local-token*
