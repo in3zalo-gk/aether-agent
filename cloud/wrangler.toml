@@ -1,0 +1,13 @@
+name = "aether-agent-core"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+[durable_objects]
+bindings = [{ name = "ACCOUNTS", class_name = "AetherAccount" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AetherAccount"]
+
+[vars]
+APP_ORIGIN = "https://aether-secure.pages.dev"
