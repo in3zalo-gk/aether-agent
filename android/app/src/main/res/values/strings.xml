@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Aether Agent</string>
+    <string name="accessibility_description">Optional foreground device control. Aether asks for approval before every read or tap and blocks sensitive apps and password fields.</string>
+</resources>
