@@ -1,0 +1,42 @@
+plugins { id 'com.android.application' }
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
+
+android {
+    namespace 'app.aether.agent'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'app.aether.agent'
+        minSdk 26
+        targetSdk 36
+        versionCode 3
+        versionName '2.1.0'
+    }
+    signingConfigs {
+        release {
+            def storePath = System.getenv('AETHER_STORE_FILE')
+            if (storePath != null) {
+                storeFile file(storePath)
+                storePassword System.getenv('AETHER_STORE_PASSWORD')
+                keyAlias System.getenv('AETHER_KEY_ALIAS')
+                keyPassword System.getenv('AETHER_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            // Keep unsigned builds possible when release secrets are unavailable.
+            if (System.getenv('AETHER_STORE_FILE') != null) signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
