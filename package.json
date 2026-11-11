@@ -1,0 +1,19 @@
+{
+  "name": "aether-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Agente BYOK com frontend Pages e automação local autenticada no Termux.",
+  "workspaces": ["backend", "frontend"],
+  "engines": { "node": ">=20.19.0" },
+  "scripts": {
+    "dev": "npm run dev --workspace frontend -- --host 127.0.0.1",
+    "build": "npm run build --workspace frontend",
+    "setup": "node scripts/setup.mjs",
+    "start": "node --env-file=backend/.env backend/server.js",
+    "test": "node --test tests/*.test.mjs && npm test --workspace frontend",
+    "test:browser": "node tests/browser.mjs",
+    "deploy": "wrangler pages deploy frontend/dist --project-name aether-secure --branch main",
+    "instructions": "node scripts/instructions.mjs"
+  },
+  "license": "UNLICENSED"
+}
