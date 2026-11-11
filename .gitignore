@@ -14,3 +14,12 @@ test-results/
 .DS_Store
 backend/.browser-profile/
 backend/.local-token*
+*.jks
+*.keystore
+*.apk
+local.properties
+.gradle/
+*signing*.json
+
+# Artefato Android publicado explicitamente
+!frontend/public/aether-agent.apk
