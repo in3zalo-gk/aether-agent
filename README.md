@@ -1,28 +1,42 @@
 # Aether Agent
 
-Backend local autenticado para o **Aether**, com interface publicada em [aether-secure.pages.dev](https://aether-secure.pages.dev). O site conversa apenas com um servidor que roda no seu dispositivo, em `127.0.0.1:3000`.
+Agente pessoal **BYOK** (*Bring Your Own Key*) com frontend web, backend Cloudflare e automação local opcional. A interface foi reconstruída em React, Tailwind CSS e Framer Motion, com foco em celular, tema escuro e suporte a PWA.
 
-> O token local protege a API que executa comandos e controla o navegador. Ele **não é** a chave da OpenRouter.
+**[Abrir Aether](https://aether-secure.pages.dev)** · **[Baixar APK Android 2.1.0](https://aether-secure.pages.dev/aether-agent.apk)** · **[Release Android](https://github.com/in3zalo-gk/aether-agent/releases/tag/v2.1.0-native-preview)**
 
-## O que é necessário
+> O frontend web e o aplicativo Android são artefatos separados. O APK é uma **prévia nativa 2.1.0**, não uma nova compilação da interface web. Instalação em aparelho, chave BYOK real e pagamento PIX ainda precisam de validação.
 
-- Android com **Termux atualizado**, instalado pelo [F-Droid](https://f-droid.org/packages/com.termux/) ou GitHub do projeto — não use a versão antiga da Play Store.
-- Node.js 20.19 ou superior e Git.
-- Chromium do repositório do Termux. O pacote fornece o executável `chromium-browser`.
-- Conexão para instalar dependências e usar os serviços externos escolhidos.
+## O que mudou na interface
 
-O Playwright não oferece suporte oficial ao Android/Termux. O projeto inclui um ajuste de runtime para tentar usar o Chromium do sistema; trate-o como compatibilidade experimental, não como ambiente oficialmente testado.
+- Layout mobile-first com sidebar adaptável, histórico e pesquisa de conversas.
+- Chat com estados de envio, execução, erro e cancelamento.
+- Configurações em painel lateral animado, sem modal central.
+- Modos **nuvem** e **local**, com indicação de disponibilidade do agente.
+- Ferramentas com aprovação explícita e execução assíncrona.
+- Manifesto, ícones e service worker para PWA. O cache guarda somente a interface pública, nunca API, mensagens ou chaves.
+- Tratamento de falhas de rede sem derrubar a interface.
+- Download do APK disponível na navegação do site.
 
-## Instalação exata no Termux
+## Como usar
 
-Execute estes comandos, **nesta ordem**:
+### Nuvem
+
+Abra o site, crie uma conta ou entre com usuário e senha. Guarde o código de recuperação fornecido ao criar a conta. Adicione um provedor e sua própria chave nas configurações, selecione o modelo e inicie uma conversa.
+
+O Worker aceita protocolos OpenAI e Anthropic, mantém o histórico da conta e cifra as chaves armazenadas com AES-GCM, usando o segredo `KEY_ENCRYPTION_SECRET`. A memória é opcional. Chamadas ao provedor podem gerar custos na sua conta; não há créditos de IA incluídos.
+
+### Agente local e Termux
+
+O chat local usa um endpoint compatível com OpenAI. As configurações e a chave local ficam na memória da sessão; o histórico local fica nesta aba e não é enviado à nuvem do Aether. O backend local é opcional para renderizar a interface e para o chat em nuvem, mas necessário para executar comandos e controlar o Chromium via Termux.
+
+Use Termux atualizado pelo F-Droid ou GitHub, Node.js 20.19+ e Git:
 
 ```sh
 pkg update
 pkg install nodejs-lts git
 pkg install tur-repo x11-repo
 pkg install chromium
-git clone https://github.com/in3zalo-gk/aether-agent
+git clone https://github.com/in3zalo-gk/aether-agent.git
 cd aether-agent
 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev --workspace backend
 node scripts/setup.mjs
@@ -30,99 +44,93 @@ cd backend
 node server.js
 ```
 
-Não rode `npx playwright install` no Android: ele tentaria baixar navegadores que não são necessários aqui. O `npm ci` acima usa o lockfile da raiz e instala apenas o workspace `backend`; o frontend já está publicado e não precisa ser instalado no telefone para o uso normal.
+Não execute `npx playwright install` no Android. O projeto tenta usar o Chromium do sistema; Playwright não oferece suporte oficial a Android/Termux. Os testes em Linux **não** comprovam funcionamento no telefone.
 
-O setup é idempotente: na primeira execução ele gera `AETHER_LOCAL_TOKEN` criptográfico de 32 bytes em Base64URL; nas próximas, conserva o token e os valores já definidos no `backend/.env`. Ele também:
+O setup é idempotente, gera o token local e grava `backend/.env` e `backend/.local-token.txt` com permissão `0600`, sem imprimir o segredo. O backend escuta apenas em `127.0.0.1:3000`. Nas configurações do site, informe `http://127.0.0.1:3000` e o token do backend. O token local **não é** a chave do provedor de IA.
 
-- grava `backend/.env` e `backend/.local-token.txt` com permissão `0600`;
-- deixa o token fora do Git (`backend/.local-token.txt` já é ignorado);
-- adiciona, quando ausentes, `ALLOWED_ORIGINS=https://aether-secure.pages.dev,http://localhost:5173,http://127.0.0.1:5173`, `PORT=3000` e `CHROMIUM_PATH` quando encontra o Chromium;
-- nunca imprime o token durante o setup.
-
-Para copiar o token, abra `backend/.local-token.txt`. Se você optar conscientemente por mostrá-lo no terminal, execute na raiz do projeto:
+Para consultar o token conscientemente no seu próprio terminal:
 
 ```sh
 node scripts/token.mjs
 ```
 
-Esse é o único script de documentação que mostra o segredo. Não cole o token em issues, commits, capturas de tela ou mensagens.
+Nunca compartilhe esse valor em mensagens, capturas, issues ou commits. O navegador pode exigir permissão de rede local para acessar localhost a partir do site HTTPS. `localhost` sempre se refere ao dispositivo em que o navegador está rodando.
 
-Também é possível imprimir o roteiro de instalação sem expor segredo:
+## Android: download e integridade
 
-```sh
-node scripts/instructions.mjs
+- [APK no site](https://aether-secure.pages.dev/aether-agent.apk).
+- [APK na release do GitHub](https://github.com/in3zalo-gk/aether-agent/releases/download/v2.1.0-native-preview/aether-agent-2.1.0-native-preview.apk).
+- Cópia versionada: [`frontend/public/aether-agent.apk`](frontend/public/aether-agent.apk).
+- Código Android: [`android/`](android/).
+
+**Versão:** 2.1.0 native preview. **Tamanho:** 67.700 bytes.
+
+SHA-256:
+
+```text
+a672b9685e3f1b397a47475a5b6b767c556ce9d453176ea7025effa4c1cc90f1
 ```
 
-## Uso e rede local
+O APK não foi recompilado para esta publicação web. O hash identifica o artefato distribuído, não garante compatibilidade ou ausência de falhas. Acessibilidade e outras ações sensíveis devem ser habilitadas e aprovadas pelo usuário.
 
-O backend deve permanecer em execução dentro de `backend`:
+## Estrutura
 
-```sh
-node server.js
-```
+| Diretório | Responsabilidade |
+| --- | --- |
+| `frontend/` | React, estilos, componentes, hooks, PWA e artefatos públicos. |
+| `functions/api/` | Proxy Pages para o Worker, preservando a API na mesma origem. |
+| `cloud/` | Worker, contas, autenticação, chat BYOK, armazenamento e PIX. |
+| `backend/` | Servidor local autenticado, comandos e Chromium. |
+| `android/` | Aplicativo Android nativo separado do frontend web. |
+| `tests/` | Testes de backend, setup e navegador. |
 
-Ele carrega `.env` com o Node 20 e escuta somente em `127.0.0.1:3000`. Portanto, `localhost` no **mesmo telefone** funciona; um computador remoto não acessa o telefone por esse endereço.
-
-Ao usar o site HTTPS publicado, Chrome/Chromium pode exibir um pedido para permitir acesso à rede local privada (PNA). Permita somente se o endereço for o site correto e o backend estiver rodando no seu próprio telefone. Dependendo da versão do navegador, pode ser necessário conceder a permissão de rede local ao Chrome/Chromium nas configurações do Android.
-
-Se o navegador bloquear o acesso HTTPS → localhost, use o frontend local como alternativa:
-
-```sh
-# na raiz do projeto
-PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci
-npm run dev
-```
-
-Abra o endereço indicado pelo Vite no mesmo dispositivo. Essa opção instala também as dependências do frontend. Em Termux/Android, compatibilidade de binários nativos do Vite/Rollup pode variar; se falhar, volte ao site publicado e verifique a permissão de rede local do navegador.
-
-## OpenRouter (BYOK)
-
-No Aether, escolha OpenRouter, configure a URL base `https://openrouter.ai/api/v1` e informe sua chave BYOK no campo próprio. A chave fica somente na memória por padrão. Apenas ao marcar **Guardar neste dispositivo** ela vai para o `localStorage`, sem criptografia; desmarcar remove a cópia salva. Para DeepSeek, escolha o provedor e confirme na sua conta um modelo compatível com ferramentas. O token local é outro campo: copie o valor gerado no Termux, mantenha o backend `http://127.0.0.1:3000` e confira o indicador conectado.
-
-A chave da OpenRouter pode gerar cobrança conforme o modelo e sua conta. Não há garantia de que um modelo seja gratuito: escolha na interface um modelo disponível na sua conta que ofereça suporte a ferramentas. Revogue ou troque a chave no painel da OpenRouter se houver suspeita de exposição.
-
-## Segurança operacional
-
-- `AETHER_LOCAL_TOKEN` autentica o navegador para o backend; não substitui e não deve ser igual à chave da OpenRouter.
-- O backend filtra variáveis com nomes sensíveis antes de executar comandos e restringe origens e host a localhost, mas comandos de shell ainda são poderosos.
-- Use somente em seus próprios dispositivos e em atividades autorizadas. Prompts de red team devem ser autorizados e não devem pedir para ignorar ética, políticas ou controles de segurança.
-- O shell não é uma sandbox. No Termux ele usa o UID do app; não pressupõe `su` nem permissões root.
+O Pages usa `https://aether-secure.pages.dev`; o Worker configurado é `aether-agent-core`, em `https://aether-agent-core.taina-tvsm2021.workers.dev`. Não confunda este projeto com outro site Aether da conta.
 
 ## Desenvolvimento e testes
 
-Na raiz, os comandos disponíveis incluem:
-
 ```sh
-npm run setup
-npm start
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci
+npm run dev
 npm run build
 npm test
+npm run test:browser
 ```
 
-`npm start` também inicia o backend com `node --env-file=backend/.env backend/server.js`. Para desenvolvimento local do frontend, `npm run dev` usa `127.0.0.1` como fallback para reduzir problemas de PNA. Execute os testes no ambiente em que pretende fazer alterações; não trate resultados de Linux como validação do Chromium no Termux.
+O Vite gera `frontend/dist` e encaminha `/api` em desenvolvimento para `http://127.0.0.1:8787`. Inicie o Worker separadamente para testar a nuvem em desenvolvimento. Para iniciar o backend local após o setup, use `npm start`.
 
-## Publicar o frontend no Cloudflare Pages
+Validações realizadas nesta reconstrução: build de produção; testes unitários frontend/cloud; testes Chromium de configuração local, aprovação/recusa de ferramentas, execução real de comando e navegador, continuidade, histórico, cancelamento, offline e tamanhos de 320 a 1440 px. As respostas do modelo no teste integrado são simuladas, sem chave de provedor real. Instalação PWA em aparelho, BYOK real e PIX não foram validados.
 
-A publicação do frontend não publica o backend nem segredos. Com acesso à conta Cloudflare:
+## Publicar no Cloudflare
 
 ```sh
-npm install -g wrangler
 npm run build
-wrangler pages project create aether-secure --production-branch main
-wrangler pages deploy frontend/dist --project-name aether-secure --branch main
+npm run deploy:pages
+# Somente ao alterar o backend cloud:
+npm run deploy:worker
 ```
 
-O destino esperado é `https://aether-secure.pages.dev`. Confira o domínio configurado no projeto e mantenha `https://aether-secure.pages.dev` na lista `ALLOWED_ORIGINS` do backend.
+Execute a publicação Pages na raiz do repositório para incluir `functions/`. Ela publica `frontend/dist` no projeto `aether-secure`, branch `main`. A cópia do APK em `frontend/public/` é incluída automaticamente no build.
 
-## Criar uma cópia no GitHub (opcional)
-
-Se for publicar sua própria cópia, autentique o GitHub CLI e crie o repositório a partir da raiz do projeto:
+Segredos devem ser configurados diretamente no Worker, nunca versionados:
 
 ```sh
-gh auth login
-gh repo create aether-agent --public --source=. --remote=origin --push
+wrangler secret put KEY_ENCRYPTION_SECRET --config cloud/wrangler.toml
+wrangler secret put MP_ACCESS_TOKEN --config cloud/wrangler.toml
+wrangler secret put MP_WEBHOOK_SECRET --config cloud/wrangler.toml
 ```
 
-Revise `git status` antes do push e confirme que `backend/.env` e `backend/.local-token.txt` não aparecem. Não inclua chaves, tokens ou arquivos locais no repositório.
+Os dois segredos Mercado Pago e a configuração do webhook são necessários para ativar PIX. Sem eles, o pagamento deve permanecer desativado. Uma confirmação visual do cliente não confirma pagamento: somente o servidor concede os benefícios de apoiador.
 
-Nenhuma licença é adicionada automaticamente por esta documentação.
+## Segurança e privacidade
+
+- Use somente em dispositivos próprios e atividades autorizadas.
+- Comandos de shell não são uma sandbox. Aprove apenas ações que você entende.
+- Não publique chaves, tokens locais, senhas, cookies ou códigos de recuperação.
+- Provedores de IA recebem o conteúdo necessário às solicitações, sob suas próprias políticas.
+- O modo local envia a chave diretamente ao endpoint configurado; escolha um provedor confiável.
+- Revogue a chave no provedor se suspeitar de exposição.
+- Backend local indisponível não significa que o serviço em nuvem está indisponível.
+
+## Licença
+
+Copyright © 2026 Say. Todos os direitos reservados. Consulte [LICENSE](LICENSE). A disponibilidade pública do repositório não concede licença de uso ou redistribuição do código.
